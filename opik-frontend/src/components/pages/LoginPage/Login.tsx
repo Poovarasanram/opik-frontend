@@ -1,22 +1,42 @@
 import { useMsal, useIsAuthenticated } from "@azure/msal-react";
 import { loginRequest } from "@/lib/msal/msalConfig";
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 const LoginPage = () => {
   const { instance, accounts } = useMsal();
+  const [email, setEmail] = useState("");
   const isAuthenticated = useIsAuthenticated();
   const navigate = useNavigate();
 
+  // const handleLogin = async () => {
+  //   try {
+  //     await instance.loginRedirect(loginRequest);
+  //   } catch (error) {
+  //     console.error("Login failed", error);
+  //   }
+  // };
+  const isValidEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+  
   const handleLogin = async () => {
     try {
-      await instance.loginRedirect(loginRequest);
+      const trimmedEmail = email.trim();
+  
+      await instance.loginRedirect({
+        ...loginRequest,
+        ...(isValidEmail(trimmedEmail)
+          ? { loginHint: trimmedEmail }
+          : {}), // Go to Azure's default screen if invalid
+      });
     } catch (error) {
       console.error("Login failed", error);
     }
   };
+  
 
   useEffect(() => {
     instance
@@ -70,6 +90,8 @@ const LoginPage = () => {
                 <p className="text-lg text-black">Email:</p>
                 <input
                   type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter Company email"
                   className="w-full p-4 text-sm border rounded-lg placeholder:text-sm"
                 />

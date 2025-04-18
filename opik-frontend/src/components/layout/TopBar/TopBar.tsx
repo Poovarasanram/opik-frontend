@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { UserRoundCheck } from "lucide-react";
+import { UserRoundCheck , LogOut ,UserCog} from "lucide-react";
 import Breadcrumbs from "@/components/layout/Breadcrumbs/Breadcrumbs";
 import usePluginsStore from "@/store/PluginsStore";
 import { useMsal } from "@azure/msal-react";
@@ -69,16 +69,16 @@ const TopBar = () => {
         {dropdownVisible && (
           <div className="absolute right-4 top-12 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10 text-sm">
             <button
-              className="w-full text-left px-4 py-2 rounded-md hover:bg-gray-200"
+              className="w-full text-left px-4 py-4 rounded-md hover:bg-gray-200"
               onClick={handleProfileClick}
             >
-              Profile
+              <UserCog className="h-4 inline pr-1"/>Profile
             </button>
             <button
-              className="w-full text-left px-4 py-2 rounded-md hover:bg-gray-200"
+              className="w-full text-left px-4 py-4 rounded-md hover:bg-gray-200"
               onClick={handleLogoutClick}
             >
-              Logout
+              <LogOut className="h-4 inline"/> Logout
             </button>
           </div>
         )}
