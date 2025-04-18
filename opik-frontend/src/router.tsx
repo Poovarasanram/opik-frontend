@@ -297,7 +297,7 @@ const onlineEvaluationRoute = createRoute({
   component: OnlineEvaluationPage,
 });
 
-// After rootRoute is created...
+// === login page ===
 const loginRoute = createRoute({
   path: "/login",
   getParentRoute: () => rootRoute,
@@ -312,6 +312,44 @@ const automationLogsRoute = createRoute({
   component: AutomationLogsPage,
 });
 
+// const routeTree = rootRoute.addChildren([
+//   loginRoute,
+//   workspaceGuardEmptyLayoutRoute.addChildren([automationLogsRoute]),
+//   workspaceGuardPartialLayoutRoute.addChildren([
+//     quickstartRoute,
+//     getStartedRoute,
+//   ]),
+//   workspaceGuardRoute.addChildren([
+//     // loginRoute,
+//     baseRoute,
+//     homeRoute,
+//     chatRoute,
+//     workspaceRoute.addChildren([
+//       projectsRoute.addChildren([
+//         projectsListRoute,
+//         projectRoute.addChildren([tracesRoute]),
+//       ]),
+//       experimentsRoute.addChildren([
+//         experimentsListRoute,
+//         compareExperimentsRoute,
+//       ]),
+//       datasetsRoute.addChildren([
+//         datasetsListRoute,
+//         datasetRoute.addChildren([datasetItemsRoute]),
+//       ]),
+//       promptsRoute.addChildren([promptsListRoute, promptRoute]),
+//       redirectRoute.addChildren([
+//         homeRedirectRoute,
+//         redirectProjectsRoute,
+//         redirectDatasetsRoute,
+//       ]),
+//       playgroundRoute,
+//       configurationRoute,
+//       onlineEvaluationRoute,
+//     ]),
+//   ]),
+// ]);
+
 const routeTree = rootRoute.addChildren([
   loginRoute,
   workspaceGuardEmptyLayoutRoute.addChildren([automationLogsRoute]),
@@ -320,7 +358,6 @@ const routeTree = rootRoute.addChildren([
     getStartedRoute,
   ]),
   workspaceGuardRoute.addChildren([
-    // loginRoute,
     baseRoute,
     homeRoute,
     chatRoute,

@@ -1,54 +1,25 @@
-// import PageLayout from "@/components/layout/PageLayout/PageLayout";
-// import Loader from "@/components/shared/Loader/Loader";
-// import usePluginStore from "@/store/PluginsStore";
-// import { FeatureTogglesProvider } from "@/components/feature-toggles-provider";
-
-// const WorkspaceGuard = ({
-//   Layout = PageLayout,
-// }: {
-//   Layout: React.FC<{ children?: React.ReactNode }>;
-// }) => {
-//   const WorkspacePreloader = usePluginStore(
-//     (state) => state.WorkspacePreloader,
-//   );
-
-//   if (!WorkspacePreloader) {
-//     return <Loader />;
-//   }
-
-//   return (
-//     <WorkspacePreloader>
-//       <FeatureTogglesProvider>
-//         <Layout />
-//       </FeatureTogglesProvider>
-//     </WorkspacePreloader>
-//   );
-// };
-
-// export default WorkspaceGuard;
+// // export default WorkspaceGuard;
+// import { useMsal } from "@azure/msal-react";
 // import { Navigate } from "@tanstack/react-router";
 // import PageLayout from "@/components/layout/PageLayout/PageLayout";
 // import Loader from "@/components/shared/Loader/Loader";
-// import usePluginStore from "@/store/PluginsStore";
 // import { FeatureTogglesProvider } from "@/components/feature-toggles-provider";
-// import { useLoggedInUserName } from "@/store/AppStore";
+// import usePluginStore from "@/store/PluginsStore";
 
 // const WorkspaceGuard = ({
 //   Layout = PageLayout,
 // }: {
 //   Layout: React.FC<{ children?: React.ReactNode }>;
 // }) => {
-//   const loggedInUser = useLoggedInUserName();
+//   const { accounts } = useMsal(); // Get the authenticated user account
+//   const WorkspacePreloader = usePluginStore((state) => state.WorkspacePreloader);
 
-//   // 🔐 If not logged in, redirect to login page
-//   if (!loggedInUser) {
+//   // If no user is logged in (i.e., no account found), redirect to the login page
+//   if (accounts.length === 0) {
 //     return <Navigate to="/login" />;
 //   }
 
-//   const WorkspacePreloader = usePluginStore(
-//     (state) => state.WorkspacePreloader,
-//   );
-
+//   // Show loader while workspace is loading
 //   if (!WorkspacePreloader) {
 //     return <Loader />;
 //   }
@@ -64,11 +35,13 @@
 
 // export default WorkspaceGuard;
 
+
+
+import { useMsal } from "@azure/msal-react";
+import { Navigate, useRouterState } from "@tanstack/react-router";
 import PageLayout from "@/components/layout/PageLayout/PageLayout";
 import Loader from "@/components/shared/Loader/Loader";
 import { FeatureTogglesProvider } from "@/components/feature-toggles-provider";
-import useAppStore from "@/store/AppStore";
-import { Navigate } from "@tanstack/react-router";
 import usePluginStore from "@/store/PluginsStore";
 
 const WorkspaceGuard = ({
@@ -76,14 +49,20 @@ const WorkspaceGuard = ({
 }: {
   Layout: React.FC<{ children?: React.ReactNode }>;
 }) => {
-  const WorkspacePreloader = usePluginStore(
-    (state) => state.WorkspacePreloader,
-  );
+  const { accounts } = useMsal();
+  const WorkspacePreloader = usePluginStore((state) => state.WorkspacePreloader);
+  const routerState = useRouterState(); // for getting current path
 
-  const apiKey = useAppStore((state) => state.user.apiKey);
+  const isAuthenticated = accounts.length > 0;
 
-  if (!apiKey) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticated) {
+    // Redirect to login with intended destination
+    return (
+      <Navigate
+        to="/login"
+        search={{ redirectTo: routerState.location.pathname + routerState.location.search }}
+      />
+    );
   }
 
   if (!WorkspacePreloader) {

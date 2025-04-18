@@ -7,6 +7,9 @@ import { QueryParamProvider } from "use-query-params";
 import { WindowHistoryAdapter } from "use-query-params/adapters/window";
 import useCustomScrollbarClass from "@/hooks/useCustomScrollbarClass";
 import SentryErrorBoundary from "@/components/layout/SentryErrorBoundary/SentryErrorBoundary";
+import { PublicClientApplication } from "@azure/msal-browser";
+import { MsalProvider } from "@azure/msal-react";
+import { msalConfig } from "@/lib/msal/msalConfig";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -16,6 +19,8 @@ const queryClient = new QueryClient({
   },
 });
 
+const msalInstance = new PublicClientApplication(msalConfig);
+
 function App() {
   useCustomScrollbarClass();
 
@@ -23,10 +28,12 @@ function App() {
     <SentryErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <QueryParamProvider adapter={WindowHistoryAdapter}>
-          <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-            <RouterProvider router={router} />
-            <Toaster />
-          </ThemeProvider>
+          <MsalProvider instance={msalInstance}>
+            <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+              <RouterProvider router={router} />
+              <Toaster />
+            </ThemeProvider>
+          </MsalProvider>
         </QueryParamProvider>
       </QueryClientProvider>
     </SentryErrorBoundary>

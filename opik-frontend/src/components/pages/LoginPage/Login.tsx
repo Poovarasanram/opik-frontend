@@ -1,254 +1,101 @@
-// // app/login/page.tsx or similar path depending on your folder structure
-
-// import { Card, CardContent } from "@/components/ui/card";
-// import { Input } from "@/components/ui/input";
-// import { Button } from "@/components/ui/button";
-// import { Checkbox } from "@/components/ui/checkbox";
-
-// // import Link from "next/link";
-// import React from "react";
-
-// const LoginForm: React.FC = () => {
-//   return (
-//     <Card className="w-[75%] h-[80%] p-4">
-//       <CardContent className="h-full flex flex-col justify-between">
-//         <div className="pt-20 flex gap-3 flex-col">
-//           <h2 className="text-center text-xl font-bold mb-4">Log in</h2>
-//           <div className="space-y-4">
-//             <div>
-//               <label className="block text-sm font-medium text-gray-700">
-//                 Email:
-//               </label>
-//               <Input
-//                 type="email"
-//                 placeholder="Enter your email"
-//                 className="mt-1"
-//               />
-//             </div>
-//             <div>
-//               <label className="block text-sm font-medium text-gray-700">
-//                 Password:
-//               </label>
-//               <Input
-//                 type="password"
-//                 placeholder="Enter your password"
-//                 className="mt-1"
-//               />
-//             </div>
-//             <div className="flex items-center space-x-2">
-//               <Checkbox />
-//               <span className="text-sm">Remember me</span>
-//             </div>
-//             <Button className="w-full">Sign in</Button>
-
-//             <div className="flex flex-col items-start">
-//               <Button variant="link" className="text-sm text-blue-500 p-3.5">
-//                 Forgot password?
-//               </Button>
-//               <Button variant="link" className="text-sm p-3.5 text-blue-500">
-//                 {/* <Link href="/login/sso">Sign in with company (SSO)</Link> */}
-//               </Button>
-//             </div>
-//           </div>
-//         </div>
-//         <div>
-//           <p className="mt-4 text-center text-xs text-gray-500">
-//             By logging in or signing up using the options above, you agree to
-//             <a href="#" className="text-blue-500">
-//               {" "}
-//               SmartCred’s Terms & Conditions
-//             </a>{" "}
-//             and
-//             <a href="#" className="text-blue-500">
-//               {" "}
-//               Privacy Policy
-//             </a>
-//             .
-//           </p>
-//         </div>
-//       </CardContent>
-//     </Card>
-//   );
-// };
-
-// const LoginPage: React.FC = () => {
-//   return <LoginForm />;
-// };
-
-// export default LoginPage;
-// components/pages/LoginPage/LoginPage.tsx
-
-// import { useState } from "react";
-// import { useNavigate } from "@tanstack/react-router";
-// import { useSetAppUser } from "@/store/AppStore";
-
-// const LoginPage = () => {
-//   const [username, setUsername] = useState("");
-//   const [password, setPassword] = useState("");
-//   const [error, setError] = useState("");
-//   const setUser = useSetAppUser();
-//   const navigate = useNavigate();
-
-//   const handleLogin = () => {
-//     // Static mock login
-//     if (username === "admin" && password === "password") {
-//       const apiKey = "mock-api-key";
-
-//       // Set Zustand user state
-//       setUser({ apiKey, userName: username });
-
-//       // Optionally set axios default auth header if needed
-//       // axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${apiKey}`;
-
-//       // Navigate to home or dashboard
-//       navigate({ to: "/" });
-//     } else {
-//       setError("Invalid username or password");
-//     }
-//   };
-
-//   return (
-//     <div className="p-6 max-w-md mx-auto">
-//       <h2 className="text-xl font-bold mb-4">Login</h2>
-
-//       {error && <p className="text-red-500 mb-2">{error}</p>}
-
-//       <input
-//         type="text"
-//         placeholder="Username"
-//         value={username}
-//         onChange={(e) => setUsername(e.target.value)}
-//         className="border p-2 mb-2 w-full"
-//       />
-//       <input
-//         type="password"
-//         placeholder="Password"
-//         value={password}
-//         onChange={(e) => setPassword(e.target.value)}
-//         className="border p-2 mb-4 w-full"
-//       />
-
-//       <button
-//         onClick={handleLogin}
-//         className="bg-blue-500 text-white px-4 py-2 rounded w-full"
-//       >
-//         Login
-//       </button>
-//     </div>
-//   );
-// };
-
-// export default LoginPage;
-
-import { useState } from "react";
+import { useMsal, useIsAuthenticated } from "@azure/msal-react";
+import { loginRequest } from "@/lib/msal/msalConfig";
 import { useNavigate } from "@tanstack/react-router";
-import { useSetAppUser } from "@/store/AppStore";
+import { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 
 const LoginPage = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(false);
-  const [error, setError] = useState("");
-
-  const setUser = useSetAppUser();
+  const { instance, accounts } = useMsal();
+  const isAuthenticated = useIsAuthenticated();
   const navigate = useNavigate();
 
-  const handleLogin = () => {
-    if (email === "admin" && password === "password") {
-      const apiKey = "mock-api-key";
-      setUser({ apiKey, userName: email });
-      navigate({ to: "/" });
-    } else {
-      setError("Invalid email or password");
+  const handleLogin = async () => {
+    try {
+      await instance.loginRedirect(loginRequest);
+    } catch (error) {
+      console.error("Login failed", error);
     }
   };
 
+  useEffect(() => {
+    instance
+      .handleRedirectPromise()
+      .then(async (response) => {
+        if (response) {
+          console.log("Login Response:", response);
+        }
+
+        if (accounts.length > 0) {
+          const tokenResponse = await instance.acquireTokenSilent({
+            ...loginRequest,
+            account: accounts[0],
+          });
+          console.log("Access Token:", tokenResponse.accessToken);
+          console.log("Access name:", tokenResponse.account.name);
+        }
+      })
+      .catch((error) => {
+        console.error("Redirect Error", error);
+      });
+  }, [instance, accounts]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate({ to: "/" });
+    }
+  }, [isAuthenticated, navigate]);
+
   return (
-    <div className="flex items-center justify-center h-screen">
-      <Card className="w-[50%] h-[80%] p-4">
-        <CardContent className="h-full flex flex-col justify-between">
-          <div className="pt-20 flex gap-3 flex-col">
-            <h2 className="text-center text-xl font-bold mb-4">Log in</h2>
-            <div className="space-y-4">
-              {error && (
-                <p className="text-red-500 text-sm text-center">{error}</p>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  User Name:
-                </label>
-                <Input
-                  type="text"
-                  placeholder="Enter your user name"
-                  className="mt-1"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+    <div className="flex h-screen">
+      {/* Left Side - Branding */}
+      <div className="w-[calc(50%-20px)] bg-white flex flex-col items-center justify-center px-10">
+        <h1 className="text-4xl font-bold rounded-lg">
+          Smart<span className="text-red-500">Assist</span>
+        </h1>
+        <p className="text-gray-600 mt-4 text-center rounded-lg">
+          Empower to integrate AI confidently and drive innovations
+        </p>
+      </div>
+  
+      {/* Right Side - Login */}
+      <div className="w-[calc(50%+20px)] bg-[#1f3b8c] flex items-center justify-center">
+        <Card className="w-full max-w-[620px] h-[530px] p-16 shadow-lg rounded-lg">
+          <CardContent className="h-full flex flex-col justify-between rounded-lg">
+            <div>
+              <h2 className="text-3xl font-bold text-center mb-8 text-black rounded-lg">
+                Login using SSO
+              </h2>
+              <div className="mb-6 flex flex-col gap-2 rounded-lg">
+                <p className="text-lg text-black">Email:</p>
+                <input
+                  type="email"
+                  placeholder="Enter Company email"
+                  className="w-full p-4 text-sm border rounded-lg placeholder:text-sm"
                 />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Password:
-                </label>
-                <Input
-                  type="password"
-                  placeholder="Enter your password"
-                  className="mt-1"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="remember"
-                  checked={remember}
-                  onCheckedChange={(val) => setRemember(!!val)}
-                />
-                <label htmlFor="remember" className="text-sm">
-                  Remember me
-                </label>
-              </div>
-
-              <Button className="w-full" onClick={handleLogin}>
+              <Button
+                className="w-full py-2 text-lg bg-black text-white hover:bg-gray-800 h-14 rounded-lg"
+                onClick={handleLogin}
+              >
                 Sign in
               </Button>
-
-              <div className="flex flex-col items-start">
-                <Button variant="link" className="text-sm text-blue-500 p-3.5">
-                  Forgot password?
-                </Button>
-                <Button variant="link" className="text-sm p-3.5 text-blue-500">
-                  {/* <Link href="/login/sso">Sign in with company (SSO)</Link> */}
-                </Button>
+              <div className="text-base text-center mt-4 rounded-lg">
+                <a href="#" className="text-blue-400">← Go back to sign in</a>
               </div>
             </div>
-          </div>
-
-          <div>
-            <p className="mt-4 text-center text-xs text-gray-500">
+            <p className="mt-6 text-sm text-center text-gray-500 rounded-lg">
               By logging in or signing up using the options above, you agree to
-              <a href="#" className="text-blue-500">
-                {" "}
-                SmartCred’s Terms & Conditions
-              </a>{" "}
-              and
-              <a href="#" className="text-blue-500">
-                {" "}
-                Privacy Policy
-              </a>
-              .
+              <a href="#" className="text-blue-400 mx-1">SmartCred's Terms & Conditions</a> and
+              <a href="#" className="text-blue-400 mx-1">Privacy Policy</a>.
             </p>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
+  
+  
 };
 
 export default LoginPage;

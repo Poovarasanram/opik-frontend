@@ -39,7 +39,7 @@
     "src",
     "e2e/**/*.ts",
     "playwright.config.ts"
-  ],
+, "src/lib/msal"  ],
   "exclude": [
     "node_modules"
   ]
