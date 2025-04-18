@@ -32,6 +32,7 @@ import ConfigurationPage from "@/components/pages/ConfigurationPage/Configuratio
 import GetStartedPage from "@/components/pages/GetStartedPage/GetStartedPage";
 import AutomationLogsPage from "@/components/pages/AutomationLogsPage/AutomationLogsPage";
 import OnlineEvaluationPage from "@/components/pages/OnlineEvaluationPage/OnlineEvaluationPage";
+import LoginPage from "./components/pages/LoginPage/Login";
 
 const TanStackRouterDevtools =
   process.env.NODE_ENV === "production"
@@ -296,6 +297,13 @@ const onlineEvaluationRoute = createRoute({
   component: OnlineEvaluationPage,
 });
 
+// After rootRoute is created...
+const loginRoute = createRoute({
+  path: "/login",
+  getParentRoute: () => rootRoute,
+  component: LoginPage,
+});
+
 // ----------- Automation logs
 
 const automationLogsRoute = createRoute({
@@ -305,12 +313,14 @@ const automationLogsRoute = createRoute({
 });
 
 const routeTree = rootRoute.addChildren([
+  loginRoute,
   workspaceGuardEmptyLayoutRoute.addChildren([automationLogsRoute]),
   workspaceGuardPartialLayoutRoute.addChildren([
     quickstartRoute,
     getStartedRoute,
   ]),
   workspaceGuardRoute.addChildren([
+    // loginRoute,
     baseRoute,
     homeRoute,
     chatRoute,
